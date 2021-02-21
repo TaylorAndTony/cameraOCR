@@ -1,11 +1,10 @@
 from pprint import pp, pprint
 from time import sleep
-import time
 
 import yaml
 from aip import AipOcr
 from cv2 import cv2
-import keyboard
+from pynput.keyboard import Key, Listener
 
 
 def recognize(image) -> dict:
@@ -72,25 +71,33 @@ def cv_main_loop():
             cv2.imwrite('crop.jpg', crop)
             result = neat_text(recognize('crop.jpg'))
             print(result)
-            time.sleep(0.5)
+            sleep(0.5)
             ocr_now = False
     cv2.destroyAllWindows()
 
 
-def process_keyboard(e):
-    global down, working, ocr_now
-    if e.name == 's':
+def process_keyboard(key):
+    global ocr_now
+    global down
+    global working
+    try:
+        btn = key.char
+    except AttributeError:
+        btn = None
+    if btn == 's':
         ocr_now = True
-    elif e.name == 'q':
-        working = False
-    elif e.name == 'a':
+    elif btn == 'a':
         down -= 10
-    elif e.name == 'd':
+    elif btn == 'd':
         down += 10
+    elif btn == 'q':
+        working = False
+        quit()
 
 if __name__ == '__main__':
     down = 260
     working = True
     ocr_now = False
-    keyboard.hook(process_keyboard)
-    cv_main_loop()
+    with Listener(on_press=process_keyboard) as listener:
+        cv_main_loop()
+        listener.join()
