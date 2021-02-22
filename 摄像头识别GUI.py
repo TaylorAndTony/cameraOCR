@@ -1,15 +1,16 @@
+from threading import Thread
 from time import sleep
+from os import system
 
 import yaml
 from aip import AipOcr
 from cv2 import cv2
+from pyperclip import copy
+from PySide2.QtCore import QObject, QTimer, Signal
+from PySide2.QtGui import QImage, QPixmap
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import QApplication, QPlainTextEdit
-from PySide2.QtGui import QImage, QPixmap
-from PySide2.QtCore import QTimer
-from PySide2.QtCore import Signal,QObject
-from pyperclip import copy
-from threading import Thread
+
 
 class UpSignal(QObject):
     text_out = Signal(QPlainTextEdit,str)
@@ -27,6 +28,7 @@ class UI:
         self.original = None
         self.left_top = ()
         self.right_bottom = ()
+        self.result = ''
         self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         # ui
         self.app = QApplication([])
@@ -39,13 +41,19 @@ class UI:
         self.window.resetSize.clicked.connect(self.resetSize)
         self.window.recognizeIt.clicked.connect(self.recognizeIt)
         self.window.exitNow.clicked.connect(self.exitNow)
+        self.window.searchOnline.clicked.connect(self.searchOnline)
+        self.window.activeSoft.clicked.connect(self.activeSoft)
         # threading
         up_signal.text_out.connect(self.setOutput)
         # timer
         self.timer = QTimer(self.window)  #初始化一个定时器
         self.timer.timeout.connect(self.timeout)  #计时结束调用operate()方法
-        self.timer.start(50)  #设置计时间隔并启动
-
+        # 软件启动后延迟 1s 启动计时器
+    
+    def activeSoft(self):
+        self.window.activeSoft.setEnabled(False)
+        self.timer.start(50)
+    
     def setOutput(self, obj, text):
         self.window.outText.setPlainText(text)
 
@@ -74,6 +82,7 @@ class UI:
             t.start()
 
     def __ocrNow(self):
+        """ sub func to OCR the text and insert value into the box """
         # change to B&W, threading me
         gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
         # crop it
@@ -82,14 +91,27 @@ class UI:
         cv2.imwrite('crop.jpg', crop)
         print('cropped image saved')
         # 拿到结果
-        result = neat_text(recognize('crop.jpg'))
+        self.result = neat_text(recognize('crop.jpg'))
         # 复制结果
-        copy(result)
-        print(result)
+        copy(self.result)
+        print(self.result)
         # 输出结果
-        up_signal.text_out.emit(self.window.outText, result)
+        up_signal.text_out.emit(self.window.outText, self.result)
         self.ocr_now = False
         print('operation finished')
+    
+    def __search(self, text):
+        """ search the text on baidu """
+        url = f'https://www.baidu.com/s?ie=utf-8&wd={text}'
+        system('start "{}"'.format(url))
+    
+    def searchOnline(self):
+        res = self.window.outText.toPlainText().strip()
+        if len(res) != 0:
+            self.__search(res)
+        else:
+            self.__ocrNow()
+            self.__search(res)
 
     def addHeight(self):
         """ Callback button of addHeight """
