@@ -2,6 +2,7 @@ from threading import Thread
 from time import sleep
 from os import system
 import webbrowser
+from sys import exit
 
 import yaml
 import numpy as np
@@ -54,8 +55,6 @@ class UI:
         # threading
         up_signal.text_out.connect(self.setOutput)
         up_signal.set_image.connect(self.setPixmap)
-        # 给界面加一个图片
-        # self.window.imgLabel.setPixmap(QPixmap('./res/camera.png'))
 
     # -------------------------------------------
     #  camera part
@@ -190,13 +189,21 @@ class UI:
         self.ocr_now = True
 
     def exitNow(self):
+        print('exit')
         self.working = False
         self.cap.release()
         quit()
 
+    def closeEvent(self, event):
+        print('exit')
+        self.working = False
+        self.cap.release()
+        quit()
+
+
     def run(self):
         self.window.show()
-        self.app.exec_()
+        exit(self.app.exec_())
 
 
 def recognize(image) -> dict:
