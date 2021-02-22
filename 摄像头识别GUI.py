@@ -144,8 +144,8 @@ class UI:
     def searchOnline(self):
         self.__ocrNow()
         sleep(0.1)
-        if len(self.result) > 20:
-            res = self.result[:20]
+        if len(self.result) > 40:
+            res = self.result[:40]
         else:
             res = self.result
         self.__search(res)
