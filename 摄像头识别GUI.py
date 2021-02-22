@@ -101,7 +101,9 @@ class UI:
             img = cv2.cvtColor(self.original, cv2.COLOR_BGR2RGB)
             # 利用PIL中的Image转化为QPixmap
             pil_img = Image.fromarray(img)
-            pixmap = pil_img.toqpixmap()
+            # resize
+            pil_img_resized = pil_img.resize((640, 480))
+            pixmap = pil_img_resized.toqpixmap()
             up_signal.set_image.emit(self.window.imgLabel, pixmap)
             if self.ocr_now:
                 self.ocr_now = False
