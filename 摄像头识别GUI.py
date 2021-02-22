@@ -1,23 +1,32 @@
 from time import sleep
 
 import yaml
-import threading
 from aip import AipOcr
 from cv2 import cv2
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QApplication
+from PySide2.QtWidgets import QApplication, QPlainTextEdit
 from PySide2.QtGui import QImage, QPixmap
 from PySide2.QtCore import QTimer
+from PySide2.QtCore import Signal,QObject
+from pyperclip import copy
+from threading import Thread
 
+class UpSignal(QObject):
+    text_out = Signal(QPlainTextEdit,str)
+
+up_signal = UpSignal()
 
 class UI:
     def __init__(self):
         # vars
         self.size = [640, 480]
-        self.height = 80
-        self.width = 80
+        self.height = 100
+        self.width = 400
         self.working = True
         self.ocr_now = False
+        self.original = None
+        self.left_top = ()
+        self.right_bottom = ()
         self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         # ui
         self.app = QApplication([])
@@ -30,43 +39,57 @@ class UI:
         self.window.resetSize.clicked.connect(self.resetSize)
         self.window.recognizeIt.clicked.connect(self.recognizeIt)
         self.window.exitNow.clicked.connect(self.exitNow)
+        # threading
+        up_signal.text_out.connect(self.setOutput)
         # timer
         self.timer = QTimer(self.window)  #初始化一个定时器
         self.timer.timeout.connect(self.timeout)  #计时结束调用operate()方法
-        self.timer.start(30)  #设置计时间隔并启动
+        self.timer.start(50)  #设置计时间隔并启动
+
+    def setOutput(self, obj, text):
+        self.window.outText.setPlainText(text)
 
     def timeout(self):
         """ callback of timer """
         # read camera
-        _, original = self.cap.read()
+        _, self.original = self.cap.read()
         # mark position
-        left_top = (
-            int((self.size[0] - self.width) / 2), 
-            int((self.size[1] - self.height) / 2)
-            )
-        right_bottom = (
-            int((self.size[0] - self.width) / 2) + self.width,
-            int((self.size[1] - self.height) / 2) + self.height
-            )
+        self.left_top = (int((self.size[0] - self.width) / 2),
+                         int((self.size[1] - self.height) / 2))
+        self.right_bottom = (int((self.size[0] - self.width) / 2) + self.width,
+                             int((self.size[1] - self.height) / 2) +
+                             self.height)
         # 画框
-        cv2.rectangle(original, left_top, right_bottom, (0, 255, 0), 2)
+        cv2.rectangle(self.original, self.left_top, self.right_bottom,
+                      (0, 255, 0), 2)
         # 显示
-        qimage = cvimg_to_qtimg(original)
+        qimage = cvimg_to_qtimg(self.original)
         pixmap = QPixmap(qimage)
         self.window.imgLabel.setPixmap(pixmap)
-        # whether to ocr it
+        # whether to ocr it, if yes, threading to ocr.
         if self.ocr_now:
-            # change to B&W
-            gray = cv2.cvtColor(original, cv2.COLOR_BGR2GRAY)
-            # crop it
-            crop = gray[left_top[1]:right_bottom[1], left_top[0]:right_bottom[0]]
-            cv2.imwrite('crop.jpg', crop)
-            print('cropped image saved')
-            result = neat_text(recognize('crop.jpg'))
-            print(result)
-            sleep(1)
             self.ocr_now = False
-            print('operation finished')
+            t = Thread(target=self.__ocrNow)
+            t.setDaemon(True)
+            t.start()
+
+    def __ocrNow(self):
+        # change to B&W, threading me
+        gray = cv2.cvtColor(self.original, cv2.COLOR_BGR2GRAY)
+        # crop it
+        crop = gray[self.left_top[1]:self.right_bottom[1],
+                    self.left_top[0]:self.right_bottom[0]]
+        cv2.imwrite('crop.jpg', crop)
+        print('cropped image saved')
+        # 拿到结果
+        result = neat_text(recognize('crop.jpg'))
+        # 复制结果
+        copy(result)
+        print(result)
+        # 输出结果
+        up_signal.text_out.emit(self.window.outText, result)
+        self.ocr_now = False
+        print('operation finished')
 
     def addHeight(self):
         """ Callback button of addHeight """
