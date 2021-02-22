@@ -4,19 +4,25 @@ from os import system
 import webbrowser
 
 import yaml
+import numpy as np
 from aip import AipOcr
 from cv2 import cv2
 from pyperclip import copy
 from PySide2.QtCore import QObject, QTimer, Signal
 from PySide2.QtGui import QImage, QPixmap
 from PySide2.QtUiTools import QUiLoader
-from PySide2.QtWidgets import QApplication, QPlainTextEdit
+from PySide2.QtWidgets import QApplication, QPlainTextEdit, QLabel
+from PIL.ImageQt import ImageQt
+from PIL import Image
 
 
 class UpSignal(QObject):
-    text_out = Signal(QPlainTextEdit,str)
+    text_out = Signal(QPlainTextEdit, str)
+    set_image = Signal(QLabel, QPixmap)
+
 
 up_signal = UpSignal()
+
 
 class UI:
     def __init__(self):
@@ -32,6 +38,7 @@ class UI:
         self.result = ''
         self.cap = cv2.VideoCapture(0, cv2.CAP_DSHOW)
         # ui
+        self.app = 0
         self.app = QApplication([])
         self.window = QUiLoader().load('./res/ui.ui')
         # buttons
@@ -43,48 +50,70 @@ class UI:
         self.window.recognizeIt.clicked.connect(self.recognizeIt)
         self.window.exitNow.clicked.connect(self.exitNow)
         self.window.searchOnline.clicked.connect(self.searchOnline)
-        self.window.activeSoft.clicked.connect(self.activeSoft)
+        self.window.activeSoft.clicked.connect(self.camera_on)
         # threading
         up_signal.text_out.connect(self.setOutput)
-        # timer
-        self.timer = QTimer(self.window)  #初始化一个定时器
-        self.timer.timeout.connect(self.timeout)  #计时结束调用operate()方法
-        # 软件启动后延迟 1s 启动计时器
+        up_signal.set_image.connect(self.setPixmap)
         # 给界面加一个图片
         # self.window.imgLabel.setPixmap(QPixmap('./res/camera.png'))
-    
-    def activeSoft(self):
-        self.window.activeSoft.setEnabled(False)
-        sleep(0.1)
-        self.timer.start(70)
-        sleep(0.1)
-    
+
+    # -------------------------------------------
+    #  camera part
+    # -------------------------------------------
+
     def setOutput(self, obj, text):
+        """ callback to set the output message """
         self.window.outText.setPlainText(text)
 
-    def timeout(self):
-        """ callback of timer """
-        # read camera
-        _, self.original = self.cap.read()
-        # mark position
-        self.left_top = (int((self.size[0] - self.width) / 2),
-                         int((self.size[1] - self.height) / 2))
-        self.right_bottom = (int((self.size[0] - self.width) / 2) + self.width,
-                             int((self.size[1] - self.height) / 2) +
-                             self.height)
-        # 画框
-        cv2.rectangle(self.original, self.left_top, self.right_bottom,
-                      (0, 255, 0), 2)
-        # 显示
-        qimage = cvimg_to_qtimg(self.original)
-        pixmap = QPixmap(qimage)
+    def setPixmap(self, obj, pixmap):
+        """ callback to set the image on the GUI """
+        #   qimage = cvimg_to_qtimg(self.original)
+        #   pixmap = QPixmap(qimage)
         self.window.imgLabel.setPixmap(pixmap)
-        # whether to ocr it, if yes, threading to ocr.
-        if self.ocr_now:
-            self.ocr_now = False
-            t = Thread(target=self.__ocrNow)
-            t.setDaemon(True)
-            t.start()
+
+    def camera_on(self):
+        t = Thread(target=self.__timeout)
+        t.setDaemon(1)
+        t.start()
+        print('界面更新线程已启动')
+
+    def __timeout(self):
+        """
+        A loop to update the video using threading
+        so call me using thread
+        """
+        while self.working:
+            # read camera
+            _, self.original = self.cap.read()
+            # self.original: numpy.ndarray
+            # mark position
+            self.left_top = (int((self.size[0] - self.width) / 2),
+                             int((self.size[1] - self.height) / 2))
+            self.right_bottom = (int(
+                (self.size[0] - self.width) / 2) + self.width,
+                                 int((self.size[1] - self.height) / 2) +
+                                 self.height)
+            # 画框
+            cv2.rectangle(self.original, self.left_top, self.right_bottom,
+                          (0, 255, 0), 2)
+            # - 显示
+            # - cv2.original -> PIL Image -> QPixmap
+            # 用cv2库将数据转为RGB通道图
+            img = cv2.cvtColor(self.original, cv2.COLOR_BGR2RGB)
+            # 利用PIL中的Image转化为QPixmap
+            pil_img = Image.fromarray(img)
+            pixmap = pil_img.toqpixmap()
+            up_signal.set_image.emit(self.window.imgLabel, pixmap)
+            if self.ocr_now:
+                self.ocr_now = False
+                t = Thread(target=self.__ocrNow)
+                t.setDaemon(True)
+                t.start()
+            sleep(0.07)
+
+    # -------------------------------------------
+    #  OCR Functions
+    # -------------------------------------------
 
     def __ocrNow(self):
         """ sub func to OCR the text and insert value into the box """
@@ -104,22 +133,25 @@ class UI:
         up_signal.text_out.emit(self.window.outText, self.result)
         self.ocr_now = False
         print('operation finished')
-    
+
     def __search(self, text):
         """ search the text on baidu """
         url = f'https://www.baidu.com/s?ie=utf-8&wd={text}'
         print(url)
         webbrowser.open(url)
-    
+
     def searchOnline(self):
-        res = self.window.outText.toPlainText().strip()
-        if len(res) != 0:
-            print(res)
-            self.__search(res)
+        self.__ocrNow()
+        sleep(0.1)
+        if len(self.result) > 20:
+            res = self.result[:20]
         else:
-            self.__ocrNow()
-            sleep(0.1)
-            self.__search(self.result)
+            res = self.result
+        self.__search(res)
+
+    # -------------------------------------------
+    #  GUI operation
+    # -------------------------------------------
 
     def addHeight(self):
         """ Callback button of addHeight """
@@ -158,6 +190,7 @@ class UI:
         self.ocr_now = True
 
     def exitNow(self):
+        self.working = False
         self.cap.release()
         quit()
 
@@ -198,6 +231,7 @@ def cvimg_to_qtimg(cvimg):
     cvimg = cv2.cvtColor(cvimg, cv2.COLOR_BGR2RGB)
     cvimg = QImage(cvimg.data, width, height, width * depth,
                    QImage.Format_RGB888)
+    # cvimg = QImage(cvimg.data, width, height, QImage.Format_RGB888)
 
     return cvimg
 
