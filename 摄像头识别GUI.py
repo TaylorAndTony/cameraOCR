@@ -1,6 +1,7 @@
 from threading import Thread
 from time import sleep
 from os import system
+import webbrowser
 
 import yaml
 from aip import AipOcr
@@ -49,10 +50,14 @@ class UI:
         self.timer = QTimer(self.window)  #初始化一个定时器
         self.timer.timeout.connect(self.timeout)  #计时结束调用operate()方法
         # 软件启动后延迟 1s 启动计时器
+        # 给界面加一个图片
+        # self.window.imgLabel.setPixmap(QPixmap('./res/camera.png'))
     
     def activeSoft(self):
         self.window.activeSoft.setEnabled(False)
-        self.timer.start(50)
+        sleep(0.1)
+        self.timer.start(70)
+        sleep(0.1)
     
     def setOutput(self, obj, text):
         self.window.outText.setPlainText(text)
@@ -103,15 +108,18 @@ class UI:
     def __search(self, text):
         """ search the text on baidu """
         url = f'https://www.baidu.com/s?ie=utf-8&wd={text}'
-        system('start "{}"'.format(url))
+        print(url)
+        webbrowser.open(url)
     
     def searchOnline(self):
         res = self.window.outText.toPlainText().strip()
         if len(res) != 0:
+            print(res)
             self.__search(res)
         else:
             self.__ocrNow()
-            self.__search(res)
+            sleep(0.1)
+            self.__search(self.result)
 
     def addHeight(self):
         """ Callback button of addHeight """
