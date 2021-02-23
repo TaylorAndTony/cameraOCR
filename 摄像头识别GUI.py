@@ -5,16 +5,14 @@ import webbrowser
 from sys import exit
 
 import yaml
-import numpy as np
 from aip import AipOcr
 from cv2 import cv2
 from pyperclip import copy
 from res import resources
-from PySide2.QtCore import QObject, QTimer, Signal
-from PySide2.QtGui import QImage, QPixmap
+from PySide2.QtCore import QObject, Signal
+from PySide2.QtGui import QPixmap
 from PySide2.QtUiTools import QUiLoader
 from PySide2.QtWidgets import QApplication, QPlainTextEdit, QLabel
-from PIL.ImageQt import ImageQt
 from PIL import Image
 
 
@@ -235,18 +233,6 @@ def neat_text(dct) -> str:
     for line in words:
         res += line['words']
     return res
-
-
-def cvimg_to_qtimg(cvimg):
-    """ opencv -> QImage """
-    height, width, depth = cvimg.shape
-    cvimg = cv2.cvtColor(cvimg, cv2.COLOR_BGR2RGB)
-    cvimg = QImage(cvimg.data, width, height, width * depth,
-                   QImage.Format_RGB888)
-    # cvimg = QImage(cvimg.data, width, height, QImage.Format_RGB888)
-
-    return cvimg
-
 
 if __name__ == '__main__':
     ui = UI()
