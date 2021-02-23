@@ -14,7 +14,39 @@
    <string>Form</string>
   </property>
   <property name="styleSheet">
-   <string notr="true">/*文本框*/
+   <string notr="true">/*方向按钮*/
+#addHeight,#addWidth,#decreaseHeight,#decreaseWidth,#resetSize
+{
+ font: 14pt &quot;Microsoft YaHei UI&quot;;
+  background-color:#ffecb3;
+  border:2px solid #ffe082;
+  border-radius:5px;
+  color: #454545;
+  padding: 6px 6px
+}
+#addHeight:hover,#addWidth:hover,#decreaseHeight:hover,#decreaseWidth:hover,#resetSize:hover
+{
+  font: 14pt &quot;Microsoft YaHei UI&quot;;
+  background-color:#ffe082;
+  border:2px solid #ffd54f;
+  border-radius:5px;
+  color: #454545;
+  padding: 6px 6px
+}
+#addHeight:hover:pressed,
+#addWidth:hover:pressed,
+#decreaseHeight:hover:pressed,
+#decreaseWidth:hover:pressed,
+#resetSize:hover:pressed
+{
+  font: 14pt &quot;Microsoft YaHei UI&quot;;
+  background-color:#ffd54f; 
+  border:2px solid #ffc107;
+  border-radius:5px;
+  color: #454545;
+  padding: 6px 6px
+}
+/*文本框*/
 QPlainTextEdit, QLineEdit
 {
   font: 14pt &quot;Microsoft YaHei UI&quot;;
@@ -68,13 +100,42 @@ QPushButton:hover:pressed
       <layout class="QVBoxLayout" name="verticalLayout_2">
        <item>
         <widget class="QPushButton" name="activeSoft">
+         <property name="styleSheet">
+          <string notr="true">QPushButton
+{
+  font: 14pt &quot;Microsoft YaHei UI&quot;;
+  background-color:#9ccc65;
+  border:2px solid #7cb342;
+  border-radius:5px;
+  color: white;
+  padding: 6px 6px
+}
+QPushButton:hover
+{
+  font: 14pt &quot;Microsoft YaHei UI&quot;;
+  background-color:#7cb342;
+  border:2px solid #689f38;
+  border-radius:5px;
+  color:white;
+  padding: 6px 6px
+}
+QPushButton:hover:pressed
+{
+  font: 14pt &quot;Microsoft YaHei UI&quot;;
+  background-color:#558b2f; 
+  border:2px solid #33691e;
+  border-radius:5px;
+  color:white;
+  padding: 6px 6px
+}</string>
+         </property>
          <property name="text">
           <string>启动</string>
          </property>
         </widget>
        </item>
        <item>
-        <layout class="QGridLayout" name="gridLayout">
+        <layout class="QGridLayout" name="gridBtn">
          <property name="sizeConstraint">
           <enum>QLayout::SetFixedSize</enum>
          </property>
@@ -87,7 +148,17 @@ QPushButton:hover:pressed
             </size>
            </property>
            <property name="text">
-            <string>-高</string>
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/fiveBtn/hollow+h.png</normaloff>:/fiveBtn/hollow+h.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -113,7 +184,17 @@ QPushButton:hover:pressed
             </size>
            </property>
            <property name="text">
-            <string>重置</string>
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/fiveBtn/hollow-c.png</normaloff>:/fiveBtn/hollow-c.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -126,7 +207,17 @@ QPushButton:hover:pressed
             </size>
            </property>
            <property name="text">
-            <string>+宽</string>
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/fiveBtn/hollow+w.png</normaloff>:/fiveBtn/hollow+w.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -152,7 +243,17 @@ QPushButton:hover:pressed
             </size>
            </property>
            <property name="text">
-            <string>-高</string>
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/fiveBtn/hollow-h.png</normaloff>:/fiveBtn/hollow-h.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -165,7 +266,17 @@ QPushButton:hover:pressed
             </size>
            </property>
            <property name="text">
-            <string>-宽</string>
+            <string/>
+           </property>
+           <property name="icon">
+            <iconset resource="resources.qrc">
+             <normaloff>:/fiveBtn/hollow-w.png</normaloff>:/fiveBtn/hollow-w.png</iconset>
+           </property>
+           <property name="iconSize">
+            <size>
+             <width>32</width>
+             <height>32</height>
+            </size>
            </property>
           </widget>
          </item>
@@ -265,6 +376,8 @@ QPushButton:hover:pressed
    </item>
   </layout>
  </widget>
- <resources/>
+ <resources>
+  <include location="resources.qrc"/>
+ </resources>
  <connections/>
 </ui>

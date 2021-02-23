@@ -9,6 +9,7 @@ import numpy as np
 from aip import AipOcr
 from cv2 import cv2
 from pyperclip import copy
+from res import resources
 from PySide2.QtCore import QObject, QTimer, Signal
 from PySide2.QtGui import QImage, QPixmap
 from PySide2.QtUiTools import QUiLoader
@@ -55,6 +56,8 @@ class UI:
         # threading
         up_signal.text_out.connect(self.setOutput)
         up_signal.set_image.connect(self.setPixmap)
+        # set picture
+        self.window.imgLabel.setPixmap(QPixmap('./res/camera.png'))
 
     # -------------------------------------------
     #  camera part

@@ -1,0 +1,9 @@
+<RCC>
+  <qresource prefix="fiveBtn">
+    <file>hollow+h.png</file>
+    <file>hollow+w.png</file>
+    <file>hollow-c.png</file>
+    <file>hollow-h.png</file>
+    <file>hollow-w.png</file>
+  </qresource>
+</RCC>
